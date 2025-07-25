@@ -1,103 +1,185 @@
-import Image from "next/image";
+"use client";
+
+import { useActionState, useTransition } from "react";
+import { useState } from "react";
+import { TacoResponse } from "@/services/tacoService";
+import SearchInput from "@/components/SearchInput";
+import { useRouter } from "next/navigation";
+import cn from "@/lib/cn";
+
+type ErrorResponse = { error: string; status: number };
+type ApiResponse = TacoResponse | ErrorResponse | null;
+
+function isErrorResponse(response: ApiResponse): response is ErrorResponse {
+  return response !== null && "error" in response;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [formState, setFormState] = useState<ErrorResponse | null>(null);
+  const [query, setQuery] = useState<string>("");
+  const [result, setResult] = useState<TacoResponse | null>(null);
+  const router = useRouter();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const onSubmit = async (prevState: null, formData: FormData) => {
+    setFormState(null);
+    const food = formData.get("food")?.toString().trim();
+    if (!food) {
+      setFormState({
+        error: "Nice try, but we need a food if we're going to taco-ify it!",
+        status: 400,
+      });
+      setResult(null);
+      return null;
+    }
+
+    setQuery(food);
+    const response = await fetch("/api/food", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ food }),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      setFormState(null);
+      setResult(data);
+    } else {
+      setFormState({ error: data.error, status: response.status });
+      setResult(null);
+    }
+    return null;
+  };
+
+  const [isRecipePending, startTransition] = useTransition();
+
+  const getRecipe = async (tacoId: number) => {
+    startTransition(async () => {
+      await fetch("/api/recipe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tacoId }),
+      })
+        .then((r) => r.json())
+        .then((r) => {
+          if (r.uuid) {
+            router.push(`/recipe/${r.uuid}`);
+          } else {
+            setFormState({
+              error: r.error || "Something went wrong. Try again?",
+              status: r.status || 500,
+            });
+          }
+        });
+    });
+  };
+
+  const [, formAction, isPending] = useActionState(onSubmit, null);
+
+  const success = result?.id && !!result?.ingredients?.length;
+
+  return (
+    <div className="p-4 flex flex-col items-center min-h-full mx-auto w-full max-w-3xl mb-4 shrink-0">
+      <form
+        action={formAction}
+        className={`animate-fade-in-up p-4 my-auto flex flex-col items-center w-full`}
+      >
+        <h1
+          className={`text-center font-light mb-8 text-slate-800 ${
+            success ? "text-4xl" : "text-6xl md:text-8xl"
+          }`}
+        >
+          <div
+            className={` mb-2 ${
+              success ? "text-xl tracking-[0.5em]" : "text-3xl tracking-[1em]"
+            }`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            ✨🔮🌮🔮✨
+          </div>
+          Will it Taco?
+        </h1>
+        <div
+          className={cn(
+            `flex items-center w-full mb-8 transition-opacity`,
+            isPending && "opacity-30"
+          )}
+        >
+          <SearchInput value={query} onChange={setQuery} />
+          <button
+            type="submit"
+            className={`cursor-pointer w-20 h-14 text-3xl bg-amber-600 rounded-r-full`}
+            disabled={isPending}
           >
-            Read our docs
-          </a>
+            <span className={cn("inline-block", isPending && "animate-spin")}>
+              {isPending ? "⏳" : "🌮"}
+            </span>
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        {isErrorResponse(formState) && (
+          <div className="text-red-600 mb-8">{formState.error}</div>
+        )}
+        {result && (
+          <div
+            className={cn(
+              `w-full`,
+              isPending && "opacity-30 transition-opacity"
+            )}
+          >
+            <div className="text-center mb-8 border-b border-amber-300 pb-4 w-full">
+              <p className="text-2xl mb-4">
+                {success ? "✅" : "❌"} {result.verdict}
+              </p>
+              <h2 className="text-4xl">
+                <em>{result.title}</em>
+              </h2>
+            </div>
+            <div className="animate-fade-in-up flex flex-col sm:flex-row gap-4 md:gap-8">
+              <div className={cn(success ? "grow " : "w-full")}>
+                {success && (
+                  <h4 className="text-xl font-bold mb-2">
+                    👨‍🍳 Here&apos;s how it comes together:
+                  </h4>
+                )}
+                <p>{result.description}</p>
+              </div>
+              {success && (
+                <div className="min-w-48">
+                  <h4 className="text-xl font-bold mb-2">🌮 Try it with:</h4>
+                  <ul className="ml-4 list-disc">
+                    {result.ingredients?.map((ingredient) => (
+                      <li key={ingredient}>{ingredient}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {success && (
+              <div className="text-center mt-8 animate-fade-in-up">
+                <button
+                  type="button"
+                  disabled={isRecipePending}
+                  className="rounded-full border-2 border-amber-600 text-amber-700 px-4 py-2 cursor-pointer hover:bg-amber-600 hover:text-white transition-colors"
+                  onClick={() => getRecipe(result.id)}
+                >
+                  Ready to try it? Get the complete recipe&nbsp;&nbsp;
+                  <span
+                    className={cn(
+                      "inline-block",
+                      isRecipePending && "animate-spin"
+                    )}
+                  >
+                    {isRecipePending ? "⏳" : "➡️"}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </form>
     </div>
   );
 }
