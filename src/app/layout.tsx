@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   title: "Will it Taco? ✨🔮🌮",
   description:
     "Just about anything can be a taco, right? Let's put that theory to the test.",
+  metadataBase:
+    process.env.NODE_ENV === "production"
+      ? new URL("https://willittaco.lol")
+      : new URL("http://localhost:3000"),
+  other: {
+    "google-adsense-account": "ca-pub-1549417323917600",
+  },
 };
 
 export default function RootLayout({
