@@ -1,7 +1,37 @@
 {
   "name": "will-it-taco",
+  "description": "Will it taco? Let's find out!",
   "version": "0.1.0",
-  "private": true,
+  "author": "Nick Van Meter",
+  "license": "MIT",
+  "homepage": "https://willittaco.lol",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nickjvm/will-it-taco.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nickjvm/will-it-taco/issues"
+  },
+  "keywords": [
+    "taco",
+    "recipe",
+    "food",
+    "ai",
+    "chatbot",
+    "genai",
+    "turso",
+    "drizzle",
+    "nextjs",
+    "typescript",
+    "react",
+    "tailwind",
+    "openai"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "private": false,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
