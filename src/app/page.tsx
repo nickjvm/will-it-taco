@@ -6,6 +6,7 @@ import { TacoResponse } from "@/services/tacoService";
 import SearchInput from "@/components/SearchInput";
 import { useRouter } from "next/navigation";
 import cn from "@/lib/cn";
+import InspirationCarousel from "@/components/InspirationCarousel";
 
 type ErrorResponse = { error: string; status: number };
 type ApiResponse = TacoResponse | ErrorResponse | null;
@@ -42,7 +43,7 @@ export default function Home() {
     });
 
     const data = await response.json();
-    if (response.ok) {
+    if (response.ok && data.id) {
       setFormState(null);
       setResult(data);
     } else {
@@ -79,7 +80,7 @@ export default function Home() {
 
   const [, formAction, isPending] = useActionState(onSubmit, null);
 
-  const success = result?.id && !!result?.ingredients?.length;
+  const success = !!result?.id && !!result?.ingredients?.length;
 
   return (
     <div className="p-4 flex flex-col items-center min-h-full mx-auto w-full max-w-3xl mb-4 shrink-0">
@@ -118,8 +119,15 @@ export default function Home() {
             </span>
           </button>
         </div>
-        {isErrorResponse(formState) && (
+        {!isPending && isErrorResponse(formState) && (
           <div className="text-red-600 mb-8">{formState.error}</div>
+        )}
+        {!result && (
+          <div className="w-full">
+            <InspirationCarousel
+              className={cn("transition-opacity", isPending && "opacity-30")}
+            />
+          </div>
         )}
         {result && (
           <div
@@ -156,13 +164,12 @@ export default function Home() {
                 </div>
               )}
             </div>
-
             {success && (
               <div className="text-center mt-8 animate-fade-in-up">
                 <button
                   type="button"
                   disabled={isRecipePending}
-                  className="rounded-full border-2 border-amber-600 text-amber-700 px-4 py-2 cursor-pointer hover:bg-amber-600 hover:text-white transition-colors"
+                  className="rounded-full border-2 border-amber-600 text-amber-700 px-4 py-2 cursor-pointer hover:bg-amber-600 focus:bg-amber-600 hover:text-white focus:text-white transition-colors disabled:bg-amber-100 disabled:cursor-not-allowed disabled:pointer-events-none"
                   onClick={() => getRecipe(result.id)}
                 >
                   Ready to try it? Get the complete recipe&nbsp;&nbsp;

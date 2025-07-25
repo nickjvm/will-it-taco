@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import ReactQueryProvider from "@/providers/queryProvider";
 import "./globals.css";
-import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,13 +36,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="h-full flex flex-col">{children}</div>
+        <ReactQueryProvider>
+          <div className="h-full flex flex-col">{children}</div>
+        </ReactQueryProvider>
         {process.env.NODE_ENV === "production" && (
-          <Script
+          <script
             async
             src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1549417323917600"
             crossOrigin="anonymous"
-            strategy="lazyOnload"
           />
         )}
       </body>

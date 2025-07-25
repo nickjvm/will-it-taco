@@ -30,7 +30,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const taco = await getTacoIdea(food);
-
-  return NextResponse.json(taco);
+  try {
+    const taco = await getTacoIdea(food);
+    return NextResponse.json(taco);
+  } catch (err) {
+    console.error("Error fetching taco idea:", err);
+    return NextResponse.json(
+      {
+        error: "Our tortilla overlords are confused. Try another item?",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }

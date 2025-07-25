@@ -1,6 +1,6 @@
 "use client";
 import { type RecipeRating } from "@/services/ratingsService";
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 interface RatingProps {
   recipeId: string;

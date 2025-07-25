@@ -131,6 +131,7 @@ export async function getRecipe(uuid: string): Promise<RecipeResponse> {
       instructions: splitArray(recipe.instructions),
     };
   } catch (err) {
+    console.error("Error fetching recipe:", err);
     // Fallback response in case of error
     return {
       uuid: null,
