@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const food = body?.food?.trim()?.toLowerCase();
+  const food = body?.food?.slice(0, 50)?.trim()?.toLowerCase();
 
   if (!food) {
     return NextResponse.json(
