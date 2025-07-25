@@ -9,10 +9,12 @@ import "swiper/css";
 import { useRef } from "react";
 type Props = {
   className?: string;
+  initialData?: InspirationResponse[];
 };
-export default function InspirationCarousel({ className }: Props) {
+export default function InspirationCarousel({ className, initialData }: Props) {
   const { data: inspiration, error } = useQuery({
     refetchOnWindowFocus: false,
+    initialData,
     refetchInterval: false,
     queryKey: ["inspiration"],
     queryFn: async () => {
@@ -23,8 +25,8 @@ export default function InspirationCarousel({ className }: Props) {
   });
 
   const swiperRef = useRef<SwiperRef>(null);
-  if (error) return <div>Failed to load</div>;
-  if (!inspiration) return <div>Loading...</div>;
+
+  if (error || !inspiration) return null;
 
   return (
     <div className={cn("", className)}>
